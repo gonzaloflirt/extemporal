@@ -40,8 +40,8 @@ s.waitForBoot {
 				var segs= e.data.select({|j| j.word == words[i].asSymbol});
 				if (segs.size() > 0) {
 					var seg = segs.scramble.first;
-					var start = seg.start * 16000;
-					var numSamples = seg.length * 16000;
+					var start = seg.start * 48000;
+					var numSamples = seg.length * 48000;
 					Buffer.read(s, e.dataDir +/+ seg.file, start, numSamples);
 				}
 			});
