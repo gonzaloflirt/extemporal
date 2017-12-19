@@ -9,7 +9,7 @@ def transcribe(speechFile):
 
     client = speech.SpeechClient()
 
-    with io.open(path.join(dataDir, speechFile + '.wav'), 'rb') as audioFile:
+    with io.open(path.join(dataDir, speechFile + '.flac'), 'rb') as audioFile:
         content = audioFile.read()
     audio = types.RecognitionAudio(content = content)
 
@@ -17,7 +17,7 @@ def transcribe(speechFile):
     for languageCode in languageCodes:
 
         config = types.RecognitionConfig(
-            encoding = enums.RecognitionConfig.AudioEncoding.LINEAR16,
+            encoding = enums.RecognitionConfig.AudioEncoding.FLAC,
             sample_rate_hertz = 16000,
             language_code = languageCode,
             enable_word_time_offsets = True,
@@ -31,9 +31,9 @@ def transcribe(speechFile):
 
 def filesToTranscribe():
     allFiles = [file for file in listdir(dataDir) if (path.isfile(path.join(dataDir, file)))]
-    wavFiles = [path.splitext(file)[0] for file in allFiles if (file.endswith('.wav'))]
+    flacFiles = [path.splitext(file)[0] for file in allFiles if (file.endswith('.flac'))]
     responseFiles = [path.splitext(file)[0] for file in allFiles if (file.endswith('.resp'))]
-    return [file for file in wavFiles if file not in responseFiles]
+    return [file for file in flacFiles if file not in responseFiles]
 
 config = configparser.ConfigParser()
 config.read('extemporal.config')
