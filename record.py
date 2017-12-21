@@ -7,11 +7,11 @@ def record():
     print('recording...')
     audio = pyaudio.PyAudio()
     stream = audio.open(
-        format=pyaudio.paInt16,
-        channels=numChannels,
-        rate=sampleRate,
-        input=True,
-        frames_per_buffer=frameSize)
+        format = pyaudio.paInt16,
+        channels = numChannels,
+        rate = sampleRate,
+        input = True,
+        frames_per_buffer = frameSize)
     frames = []
     while recording:
         data = stream.read(frameSize)
