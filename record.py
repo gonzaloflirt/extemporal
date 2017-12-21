@@ -1,9 +1,21 @@
 import configparser, datetime, os, pyaudio, sys, threading, termios, wave, numpy
 
+def printDevices():
+    audio = pyaudio.PyAudio()
+    print('devices:')
+    for i in range(0, audio.get_host_api_info_by_index(0).get('deviceCount')):
+        device = audio.get_device_info_by_host_api_device_index(0, i)
+        print('  ', i, device.get('name'),
+                'ins:', device.get('maxInputChannels'),
+                'outs:', device.get('maxOutputChannels'))
+    deviceIndex = config.getint('audio', 'deviceIndex')
+    print('using:', audio.get_device_info_by_host_api_device_index(0, deviceIndex).get('name'))
+
 def record():
     numChannels = config.getint('audio', 'channels')
     sampleRate = config.getint('audio', 'samplerate')
     frameSize = config.getint('audio', 'framesize')
+    deviceIndex = config.getint('audio', 'deviceIndex')
     print('recording...')
     audio = pyaudio.PyAudio()
     stream = audio.open(
@@ -11,7 +23,8 @@ def record():
         channels = numChannels,
         rate = sampleRate,
         input = True,
-        frames_per_buffer = frameSize)
+        frames_per_buffer = frameSize,
+        input_device_index = deviceIndex)
     frames = []
     while recording:
         data = stream.read(frameSize)
@@ -57,6 +70,7 @@ def waitForKeypress():
 
 config = configparser.ConfigParser()
 config.read('extemporal.config')
+printDevices()
 recording = False
 while True:
     key = waitForKeypress()
