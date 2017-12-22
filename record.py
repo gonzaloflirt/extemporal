@@ -1,4 +1,6 @@
-import configparser, datetime, os, pyaudio, sys, threading, termios, wave, numpy
+import configparser, datetime, os, pyaudio, sys, threading, termios, wave
+from pydub import AudioSegment
+from pydub import effects
 
 def printDevices():
     audio = pyaudio.PyAudio()
@@ -25,34 +27,27 @@ def record():
         input = True,
         frames_per_buffer = frameSize,
         input_device_index = deviceIndex)
-    frames = []
+
+    frames = AudioSegment.empty()
     while recording:
-        data = stream.read(frameSize)
-        frames.append(numpy.fromstring(data, numpy.int16))
+        frames += AudioSegment(
+            stream.read(frameSize), sample_width=2, frame_rate = sampleRate, channels=1)
     stream.stop_stream()
     stream.close()
     audio.terminate()
-    frames = numpy.hstack(frames)
     print('finished recording')
 
-    if len(frames) < sampleRate * 0.3:
-        return
-    trimSeconds = config.getfloat('audio', 'trimSeconds')
-    trimSamples = int(sampleRate  * trimSeconds)
-    frames = frames[trimSamples:] # trim begin
-    frames = frames[:len(frames) - trimSamples] # trim end
-    intMax = 32767
-    frames *= int(32767 / max(abs(frames))) # normalize
+    trim = config.getfloat('audio', 'trimSeconds') * 1000
+    frames = frames[trim:] # trim begin
+    frames = frames[:-trim] # trim end
+    frames = effects.normalize(frames) # normalize
 
-    filename = datetime.datetime.now().isoformat() + '.wav'
-    dataDir = config.get('folders', 'data')
-    waveFile = wave.open(os.path.join(dataDir, filename), 'wb')
-    waveFile.setnchannels(numChannels)
-    waveFile.setsampwidth(audio.get_sample_size(pyaudio.paInt16))
-    waveFile.setframerate(sampleRate)
-    waveFile.writeframes(b''.join(frames))
-    waveFile.close()
-    print("wrote", filename)
+    if (frames.duration_seconds > 0):
+        filename = datetime.datetime.now().isoformat()
+        dataDir = config.get('folders', 'data')
+        frames.export(os.path.join(dataDir, filename) + '.wav', format = 'wav')
+        frames.set_frame_rate(16000).export(os.path.join(dataDir, filename) + '.flac', format = 'flac')
+        print("wrote", filename, 'duration:', frames.duration_seconds, 'seconds')
 
 def waitForKeypress():
     fd = sys.stdin.fileno()
