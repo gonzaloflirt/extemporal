@@ -38,8 +38,14 @@ def record():
     print('finished recording')
 
     trim = config.getfloat('audio', 'trimSeconds') * 1000
+    treshold = config.getfloat('audio', 'compressorTreshold')
+    ratio = config.getfloat('audio', 'compressorRatio')
+    attack = config.getfloat('audio', 'compressorAttack')
+    release = config.getfloat('audio', 'compressorRelease')
     frames = frames[trim:] # trim begin
     frames = frames[:-trim] # trim end
+    frames = effects.compress_dynamic_range(
+        frames, threshold = treshold, ratio = ratio, attack = attack, release = release)
     frames = effects.normalize(frames) # normalize
 
     if (frames.duration_seconds > 0):
