@@ -10,6 +10,7 @@ s.waitForBoot {
 	];
 
 	e.dataDir = Document.current.dir +/+ 'data';
+	e.dataSampleRate = 48000;
 
 	e.data = {
 		var file = File.open(e.dataDir +/+ 'extemporal.sc', "r");
@@ -19,7 +20,7 @@ s.waitForBoot {
 	}.value();
 
 	SynthDef(\sampler, {
-		|bufnum, vol = 0, pos = 0, fade = 0.02|
+		|bufnum, vol = 0, pos = 0, fade = 0.002|
 		var sig = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), doneAction: 2);
 		var env = EnvGen.ar(Env.linen(fade, BufDur.ir(bufnum) - (2*fade), fade));
 		Out.ar(0, Pan2.ar(vol.dbamp * env * sig, pos));
@@ -40,8 +41,8 @@ s.waitForBoot {
 				var segs= e.data.select({|j| j.word == words[i].asSymbol});
 				if (segs.size() > 0) {
 					var seg = segs.scramble.first;
-					var start = seg.start * 48000;
-					var numSamples = seg.length * 48000;
+					var start = seg.start * e.dataSampleRate;
+					var numSamples = seg.length * e.dataSampleRate;
 					Buffer.read(s, e.dataDir +/+ seg.file, start, numSamples);
 				}
 			});
@@ -66,8 +67,8 @@ s.waitForBoot {
 		Task {
 			var buffers = Array.fill(numWords, { |i|
 				var seg= e.data.scramble.first;
-				var start = seg.start * 16000;
-				var numSamples = seg.length * 16000;
+				var start = seg.start * e.dataSampleRate;
+				var numSamples = seg.length * e.dataSampleRate;
 				Buffer.read(s, e.dataDir +/+ seg.file, start, numSamples);
 			});
 			s.sync;
@@ -92,8 +93,8 @@ s.waitForBoot {
 			var segs= e.data.select({|j| j.word == word.asSymbol}).scramble;
 			var buffers = Array.fill(segs.size, { |i|
 				var seg= segs[i];
-				var start = seg.start * 16000;
-				var numSamples = seg.length * 16000;
+				var start = seg.start * e.dataSampleRate;
+				var numSamples = seg.length * e.dataSampleRate;
 				Buffer.read(s, e.dataDir +/+ seg.file, start, numSamples);
 			});
 			s.sync;
