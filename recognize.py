@@ -1,29 +1,22 @@
-import ast, argparse, configparser, io, pickle
-from google.cloud import speech
-from google.cloud.speech import enums
-from google.cloud.speech import types
+import ast, argparse, configparser, io, json, pickle
+from watson_developer_cloud import SpeechToTextV1
 from os import listdir, path
 
 def transcribe(speechFile):
     print('transcribing ' + speechFile)
 
-    client = speech.SpeechClient()
+    client = SpeechToTextV1(
+        username = config.get('recognition', 'username'),
+        password = config.get('recognition', 'password'),
+    )
 
-    with io.open(path.join(dataDir, speechFile + '.flac'), 'rb') as audioFile:
-        content = audioFile.read()
-    audio = types.RecognitionAudio(content = content)
+    audio =  open(path.join(dataDir, speechFile + '.flac'), 'rb')
 
     responses = {}
     for languageCode in languageCodes:
 
-        config = types.RecognitionConfig(
-            encoding = enums.RecognitionConfig.AudioEncoding.FLAC,
-            sample_rate_hertz = 16000,
-            language_code = languageCode,
-            enable_word_time_offsets = True,
-            profanity_filter = False)
-
-        responses[languageCode] = client.recognize(config, audio)
+        responses[languageCode] = client.recognize(audio, content_type = 'audio/flac',
+            timestamps = True ,continuous  =True, max_alternatives = 1, model = languageCode)
 
     responseFile = open(path.join(dataDir, speechFile + '.resp'), 'wb')
     pickle.dump(responses, responseFile)
